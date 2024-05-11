@@ -1,6 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { redirect } from "next/dist/server/api-utils";
 import Head from "next/head";
 import QrScanner from "qr-scanner";
 import { useEffect, useRef, useState } from "react";
+import Swal from "sweetalert2";
+
 
 
 export default function Home() {
@@ -16,16 +20,30 @@ export default function Home() {
   // Success
   const onScanSuccess = (result: QrScanner.ScanResult) => {
     // 🖨 Print the "result" to browser console.
-    console.log(result);
+    // console.log(result);
     // ✅ Handle success.
     // 😎 You can do whatever you want with the scanned result.
-    setScannedResult(result?.data);
+
+        Swal.fire({
+          title: "Success!",
+          text: "Data Berhasil Masuk",
+          icon: "success",
+          confirmButtonText: "Cool",
+          timer: 2000,
+          timerProgressBar: true,
+        });
+
+
+
+    return window.location.reload();
+
+
   };
 
   // Fail
   const onScanFail = (err: string | Error) => {
     // 🖨 Print the "err" to browser console.
-    console.log(err);
+    // console.log(err);
   };
   useEffect(() => {
     if (videoEl?.current && !scanner.current) {
