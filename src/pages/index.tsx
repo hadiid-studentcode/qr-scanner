@@ -17,6 +17,33 @@ export default function Home() {
   // Result
   const [scannedResult, setScannedResult] = useState<string | undefined>("");
 
+
+   useEffect(() => {
+     let timerInterval : any;
+     Swal.fire({
+       title: "Loading Scanning!",
+       html: "Silahkan Tunggu dalam <b></b> Detik.",
+       timer: 3000,
+       timerProgressBar: true,
+       didOpen: () => {
+         Swal.showLoading();
+         const container : any = Swal.getHtmlContainer()
+         const b: any = container.querySelector("b");
+         timerInterval = setInterval(() => {
+           const remainingTimeInMilliseconds : any = Swal.getTimerLeft();
+           b.textContent = Math.ceil(remainingTimeInMilliseconds / 1000);
+         }, 100);
+       },
+       willClose: () => {
+         clearInterval(timerInterval);
+       },
+     }).then((result) => {
+       /* Read more about handling dismissals below */
+       if (result.dismiss === Swal.DismissReason.timer) {
+       }
+     });
+   }, []);
+
   // Success
   const onScanSuccess = (result: QrScanner.ScanResult) => {
     // 🖨 Print the "result" to browser console.
