@@ -1,11 +1,72 @@
 import Head from "next/head";
-import Image from "next/image";
-import { Inter } from "next/font/google";
-import styles from "@/styles/Home.module.css";
+import QrScanner from "qr-scanner";
+import { useEffect, useRef, useState } from "react";
 
-const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  // QR States
+  const scanner = useRef<QrScanner>();
+  const videoEl = useRef<HTMLVideoElement>(null);
+  const qrBoxEl = useRef<HTMLDivElement>(null);
+  const [qrOn, setQrOn] = useState<boolean>(true);
+
+  // Result
+  const [scannedResult, setScannedResult] = useState<string | undefined>("");
+
+  // Success
+  const onScanSuccess = (result: QrScanner.ScanResult) => {
+    // 🖨 Print the "result" to browser console.
+    console.log(result);
+    // ✅ Handle success.
+    // 😎 You can do whatever you want with the scanned result.
+    setScannedResult(result?.data);
+  };
+
+  // Fail
+  const onScanFail = (err: string | Error) => {
+    // 🖨 Print the "err" to browser console.
+    console.log(err);
+  };
+  useEffect(() => {
+    if (videoEl?.current && !scanner.current) {
+      // 👉 Instantiate the QR Scanner
+      scanner.current = new QrScanner(videoEl?.current, onScanSuccess, {
+        onDecodeError: onScanFail,
+        // 📷 This is the camera facing mode. In mobile devices, "environment" means back camera and "user" means front camera.
+        preferredCamera: "environment",
+        // 🖼 This will help us position our "QrFrame.svg" so that user can only scan when qr code is put in between our QrFrame.svg.
+        highlightScanRegion: true,
+        // 🔥 This will produce a yellow (default color) outline around the qr code that we scan, showing a proof that our qr-scanner is scanning that qr code.
+        highlightCodeOutline: true,
+        // 📦 A custom div which will pair with "highlightScanRegion" option above 👆. This gives us full control over our scan region.
+        overlay: qrBoxEl?.current || undefined,
+      });
+
+      // 🚀 Start QR Scanner
+      scanner?.current
+        ?.start()
+        .then(() => setQrOn(true))
+        .catch((err) => {
+          if (err) setQrOn(false);
+        });
+    }
+    // 🧹 Clean up on unmount.
+    // 🚨 This removes the QR Scanner from rendering and using camera when it is closed or removed from the UI.
+    return () => {
+      if (!videoEl?.current) {
+        scanner?.current?.stop();
+      }
+    };
+  }, []);
+
+  // ❌ If "camera" is not allowed in browser permissions, show an alert.
+  useEffect(() => {
+    if (!qrOn)
+      alert(
+        "Camera is blocked or not accessible. Please allow camera in your browser permissions and Reload."
+      );
+  }, [qrOn]);
+
   return (
     <>
       <Head>
@@ -14,101 +75,29 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${styles.main} ${inter.className}`}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>src/pages/index.tsx</code>
+
+      <div className="qr-reader">
+        {/* QR */}
+        <video ref={videoEl}></video>
+        <div ref={qrBoxEl} className="qr-box">
+        
+        </div>
+
+        {/* Show Data Result if scan is success */}
+        {scannedResult && (
+          <p
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              zIndex: 99999,
+              color: "white",
+            }}
+          >
+            Scanned Result: {scannedResult}
           </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{" "}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
-
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+        )}
+      </div>
     </>
   );
 }
